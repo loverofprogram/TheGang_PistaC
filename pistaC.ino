@@ -11,8 +11,12 @@ const int ledRosa = 5;
 const int ledNegro = 6;
 
 // Pines para los motores
-const int motorIzquierdo = 9;
-const int motorDerecho = 10;
+const int ln1 = 4;
+const int ln2 = 5;
+const int enA = 9;
+const int ln3 = 6;
+const int ln4 = 7;
+const int enB = 10;
 
 // Variables para los valores RGB
 uint16_t clear, red, green, blue;
@@ -41,8 +45,15 @@ void setup() {
   pinMode(ledNegro, OUTPUT);
 
   // Configura los pines de los motores como salida
-  pinMode(motorIzquierdo, OUTPUT);
-  pinMode(motorDerecho, OUTPUT);
+  pinMode(Izqln1, OUTPUT);
+  pinMode(Izqln2, OUTPUT);
+  pinMode(enA, OUTPUT);
+  pinMode(Derln3, OUTPUT);
+  pinMode(Derln4, OUTPUT);
+  pinMode(enB, OUTPUT);
+
+  analogWrite(enA, 255);
+  analogWrite(enB, 255);
 
   // Inicializa los LEDs apagados
   apagarLeds();
@@ -122,8 +133,10 @@ bool esColorNegro(float r, float g, float b) {
 
 // Función para mover el robot hacia adelante
 void moverAdelante() {
-  analogWrite(motorIzquierdo, 255);  // Motor izquierdo a máxima velocidad
-  analogWrite(motorDerecho, 255);    // Motor derecho a máxima velocidad
+  digitalWrite(Izqln1, HIGH);
+  digitalWrite(Izqln2, LOW);
+  digitalWrite(Derln3, HIGH);
+  digitalWrite(Derln4, LOW);
 }
 
 // Función para evitar el obstáculo (casilla negra)
