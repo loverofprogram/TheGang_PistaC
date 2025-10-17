@@ -6,7 +6,7 @@
 // Inicializa el sensor TCS34725
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
 
-// Pines para el LED RGB 
+// Pines para el LED RGB
 const int ledRojo = 3;
 const int ledVerde = 4;
 const int ledAzul = 5;
@@ -48,7 +48,8 @@ void setup() {
     Serial.println("Sensor TCS34725 inicializado correctamente.");
   } else {
     Serial.println("No se pudo inicializar el sensor TCS34725.");
-    while (1);
+    while (1)
+      ;
   }
 
   // Configura los pines de los LEDs como salida
@@ -84,47 +85,57 @@ void setup() {
 void loop() {
   // Lee los valores RGB y el valor de "clear"
   tcs.getRawData(&red, &green, &blue, &clear);
+  float rNorm = 0;
+  float gNorm = 0;
+  float bNorm = 0;
 
   // Normaliza los valores de los colores
-  if (clear > 0){
-    float rNorm = (float)red / clear * 256;
-    float gNorm = (float)green / clear * 256;
-    float bNorm = (float)blue / clear * 256;
+  if (clear > 0) {
+    rNorm = (float)red / clear * 256;
+    gNorm = (float)green / clear * 256;
+    bNorm = (float)blue / clear * 256;
   }
 
   // Ver que tal funciona con esto
-  int rMap = constrain(map((int)rNorm, minColor, maxColor,0,255),0,255); //red
-  int gMap = constrain(map((int)gNorm, minColor, maxColor,0,255),0,255); //green
-  int bMap = constrain(map((int)bNorm, minColor, maxColor,0,255),0,255); //blue
+  int rMap = constrain(map((int)rNorm, minColor, maxColor, 0, 255), 0, 255);  //red
+  int gMap = constrain(map((int)gNorm, minColor, maxColor, 0, 255), 0, 255);  //green
+  int bMap = constrain(map((int)bNorm, minColor, maxColor, 0, 255), 0, 255);  //blue
 
   // Muestra los valores RGB normalizados para facilitar la comparación
-  Serial.print(" R: "); Serial.print(rMap);
-  Serial.print(" G: "); Serial.print(gMap);
-  Serial.print(" B: "); Serial.println(bMap);
-  Serial.print(" Clear: "); Serial.println(clear);
+  Serial.print(" R: ");
+  Serial.print(rMap);
+  Serial.print(" G: ");
+  Serial.print(gMap);
+  Serial.print(" B: ");
+  Serial.println(bMap);
+  Serial.print(" Clear: ");
+  Serial.println(clear);
 
   // Medir distancias
   long distIzq = medirDistancia(trigIzq, echoIzq);
   long distCen = medirDistancia(trigCentro, echoCentro);
   long distDer = medirDistancia(trigDer, echoDer);
 
-  Serial.print("Izq: "); Serial.print(distIzq);
-  Serial.print("  Centro: "); Serial.print(distCen);
-  Serial.print("  Der: "); Serial.println(distDer);
- 
+  Serial.print("Izq: ");
+  Serial.print(distIzq);
+  Serial.print("  Centro: ");
+  Serial.print(distCen);
+  Serial.print("  Der: ");
+  Serial.println(distDer);
+
 
 
   if (esColorNegro(rMap, gMap, bMap)) {
     Serial.println("Negro/Obstaculo");
-    encenderLed(0,0,0);
+    encenderLed(0, 0, 0);
     evitarObstaculo();
     return;
   }
 
-  if (distCen < 5){
+  if (distCen < 5) {
     detenerMotores();
     delay(200);
-    if (distDer > distIzq){
+    if (distDer > distIzq) {
       Serial.println("Gira derecha");
       girarDerecha();
     } else {
@@ -140,19 +151,18 @@ void loop() {
   // Determina el color detectado
   if (esColorAzul(rMap, gMap, bMap)) {
     Serial.println("Azul");
-    encenderLedRGB(0,0,255);
-  }
-  else if (esColorAmarillo(rMap, gMap, bMap)) {
+    encenderLed(0, 0, 255);
+  } else if (esColorAmarillo(rMap, gMap, bMap)) {
     Serial.println("Amarillo");
-    encenderLedRGB(255,255,0);
-  }
-  else if (esColorRosa(rMap, rMap, rMap)) {
+    encenderLed(255, 255, 0);
+  } else if (esColorRosa(rMap, gMap, bMap)) {
     Serial.println("Rosa");
-    encenderLedRGB(255,0,255);
+    encenderLed(255, 0, 255);
   }
 
   moverAdelante();
   delay(200);
+}
 
 // Función para apagar todos los LEDs
 void apagarLeds() {
@@ -168,12 +178,12 @@ void encenderLed(int rojo, int verde, int azul) {
   analogWrite(ledAzul, azul);
 }
 
- 
+
 
 // Funciones para determinar el color basándose en los valores normalizados
 bool esColorAzul(float r, float g, float b) {
   //return (b > umbralAzul && r < umbralAzul && g < umbralAzul);
-  return (b > umbralAzul && r < b * 0.5 && g < b *0.7);
+  return (b > umbralAzul && r < b * 0.5 && g < b * 0.7);
 }
 
 bool esColorAmarillo(float r, float g, float b) {
@@ -192,14 +202,14 @@ bool esColorNegro(float r, float g, float b) {
 }
 
 // Ultrasonicos
-  long medirDistancia(int trigPin, int echoPin) {
-    digitalWrite(trigPin, LOW);
-    delayMicroseconds(2);
-    digitalWrite(trigPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(trigPin, LOW);
-    long duracion = pulseIn(echoPin, HIGH, 25000);
-    return duracion * 0.034 / 2; // distancia en cm
+long medirDistancia(int trigPin, int echoPin) {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  long duracion = pulseIn(echoPin, HIGH, 25000);
+  return duracion * 0.034 / 2;  // distancia en cm
 }
 
 // Función para mover el robot hacia adelante
@@ -210,21 +220,21 @@ void moverAdelante() {
   digitalWrite(derln4, LOW);
 }
 
-void detenerMotores(){
+void detenerMotores() {
   digitalWrite(izqln1, LOW);
   digitalWrite(izqln2, LOW);
   digitalWrite(derln3, LOW);
   digitalWrite(derln4, LOW);
 }
 
-void girarDerecha(){
+void girarDerecha() {
   digitalWrite(izqln1, HIGH);
   digitalWrite(izqln2, LOW);
   digitalWrite(derln3, LOW);
   digitalWrite(derln4, HIGH);
 }
 
-void girarIzquierda(){
+void girarIzquierda() {
   digitalWrite(izqln1, LOW);
   digitalWrite(izqln2, HIGH);
   digitalWrite(derln3, HIGH);
@@ -239,9 +249,9 @@ void evitarObstaculo() {
 
   //Retroceder un poquito
   digitalWrite(izqln1, LOW);
-  digitalWrite(izqln2,HIGH);
-  digitalWrite(derln3,LOW);
-  digitalWrite(derln4,HIGH);
+  digitalWrite(izqln2, HIGH);
+  digitalWrite(derln3, LOW);
+  digitalWrite(derln4, HIGH);
   delay(600);
 
   detenerMotores();
@@ -250,9 +260,9 @@ void evitarObstaculo() {
   long distIzq = medirDistancia(trigIzq, echoIzq);
   long distDer = medirDistancia(trigDer, echoDer);
 
-  if (distDer > distIzq){
+  if (distDer > distIzq) {
     girarDerecha();
-  } else{
+  } else {
     girarIzquierda();
   }
 
@@ -260,6 +270,3 @@ void evitarObstaculo() {
   detenerMotores();
   delay(300);
 }
-
-
-
