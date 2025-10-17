@@ -1,21 +1,22 @@
+// PISTA C
+
 #include <Wire.h>
 #include <Adafruit_TCS34725.h>
 
 // Inicializa el sensor TCS34725
-Adafruit_TCS34725 tcs;
+Adafruit_TCS34725 tcs Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_1X);
 
-// Pines de los LEDs para indicar los colores
-const int ledAzul = 3;
-const int ledAmarillo = 4;
-const int ledRosa = 5;
-const int ledNegro = 6;
+// Pines para el LED RGB 
+const int ledRojo = 3;
+const int ledVerde = 4;
+const int ledAzul = 5;
 
 // Pines para los motores
-const int ln1 = 4;
-const int ln2 = 5;
-const int enA = 9;
-const int ln3 = 6;
-const int ln4 = 7;
+const int izqln1 = 4;
+const int izqln2 = 5;
+const int inA = 9;
+const int derln3 = 6;
+const int derln4 = 7;
 const int enB = 10;
 
 // Variables para los valores RGB
@@ -39,24 +40,23 @@ void setup() {
   }
 
   // Configura los pines de los LEDs como salida
+  pinMode(ledRojo, OUTPUT);
+  pinMode(ledVerde, OUTPUT);
   pinMode(ledAzul, OUTPUT);
-  pinMode(ledAmarillo, OUTPUT);
-  pinMode(ledRosa, OUTPUT);
-  pinMode(ledNegro, OUTPUT);
 
   // Configura los pines de los motores como salida
-  pinMode(Izqln1, OUTPUT);
+  pinMode(izqln1, OUTPUT);
   pinMode(Izqln2, OUTPUT);
   pinMode(enA, OUTPUT);
-  pinMode(Derln3, OUTPUT);
-  pinMode(Derln4, OUTPUT);
+  pinMode(derln3, OUTPUT);
+  pinMode(derln4, OUTPUT);
   pinMode(enB, OUTPUT);
 
   analogWrite(enA, 255);
   analogWrite(enB, 255);
 
   // Inicializa los LEDs apagados
-  apagarLeds();
+  apagarLedRGB();
 }
 
 void loop() {
@@ -81,19 +81,19 @@ void loop() {
 
   // Determina el color detectado
   if (esColorAzul(rNorm, gNorm, bNorm)) {
-    encenderLed(ledAzul);
+    encenderLedRGB(0,0,255);
     moverAdelante();
   }
   else if (esColorAmarillo(rNorm, gNorm, bNorm)) {
-    encenderLed(ledAmarillo);
+    encenderLedRGB(255,255,0);
     moverAdelante();
   }
   else if (esColorRosa(rNorm, gNorm, bNorm)) {
-    encenderLed(ledRosa);
+    encenderLedRGB(255,0,255);
     moverAdelante();
   }
   else if (esColorNegro(rNorm, gNorm, bNorm)) {
-    encenderLed(ledNegro);
+    encenderLed(0,0,0);
     evitarObstaculo();
   }
 
@@ -102,16 +102,16 @@ void loop() {
 
 // Función para apagar todos los LEDs
 void apagarLeds() {
+  digitalWrite(ledRojo, LOW);
+  digitalWrite(ledVerde, LOW);
   digitalWrite(ledAzul, LOW);
-  digitalWrite(ledAmarillo, LOW);
-  digitalWrite(ledRosa, LOW);
-  digitalWrite(ledNegro, LOW);
 }
 
 // Función para encender un LED específico
-void encenderLed(int led) {
-  apagarLeds();
-  digitalWrite(led, HIGH);
+void encenderLed(int rojo, int verde, int azul) {
+  analogWrite(ledRojo, rojo);
+  analogWrite(ledVerde, Verde);
+  analogWrite(ledAzul, azul);
 }
 
 // Funciones para determinar el color basándose en los valores normalizados
@@ -144,8 +144,8 @@ void evitarObstaculo() {
   analogWrite(motorIzquierdo, 0);   // Detener motor izquierdo
   analogWrite(motorDerecho, 0);     // Detener motor derecho
   delay(1000);                      // Pausa para evitar choque
-  // Aquí podrías agregar lógica para cambiar de dirección si es necesario
-  analogWrite(motorIzquierdo,
+  
+  //analogWrite(motorIzquierdo,
 
 
 
