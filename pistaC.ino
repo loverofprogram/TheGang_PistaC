@@ -4,7 +4,7 @@
 #include <Adafruit_TCS34725.h>
 
 // Inicializa el sensor TCS34725
-Adafruit_TCS34725 tcs Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_1X);
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_1X);
 
 // Pines para el LED RGB 
 const int ledRojo = 3;
@@ -63,36 +63,47 @@ void loop() {
   // Lee los valores RGB y el valor de "clear"
   tcs.getRawData(&red, &green, &blue, &clear);
 
-  // Imprime los valores en el monitor serial
-  Serial.print("R: "); Serial.print(red);
-  Serial.print(" G: "); Serial.print(green);
-  Serial.print(" B: "); Serial.print(blue);
-  Serial.print(" Clear: "); Serial.println(clear);
+
+  // // Imprime los valores en el monitor serial
+  // Serial.print("R: "); Serial.print(red);
+  // Serial.print(" G: "); Serial.print(green);
+  // Serial.print(" B: "); Serial.print(blue);
+  // Serial.print(" Clear: "); Serial.println(clear);
 
   // Normaliza los valores de los colores
   float rNorm = (float)red / clear * 256;
   float gNorm = (float)green / clear * 256;
   float bNorm = (float)blue / clear * 256;
 
+  // Ver que tal funciona con esto
+  int rMap = constrain(map((int)rNorm, minColor, maxColor,0,255)0,255); //red
+  int gMap = constrain(map((int)gNorm, minColor, maxColor,0,255)0,255); //green
+  int bMap = constrain(map((int)bNorm, minColor, maxColor,0,255)0,255); //blue
+
   // Muestra los valores RGB normalizados para facilitar la comparación
-  Serial.print("Normalizado - R: "); Serial.print(rNorm);
-  Serial.print(" G: "); Serial.print(gNorm);
-  Serial.print(" B: "); Serial.println(bNorm);
+  Serial.print(" R: "); Serial.print(rMap);
+  Serial.print(" G: "); Serial.print(rMap);
+  Serial.print(" B: "); Serial.println(rMap);
+  Serial.print(" Clear: "); Serial.println(clear);
 
   // Determina el color detectado
-  if (esColorAzul(rNorm, gNorm, bNorm)) {
+  if (esColorAzul(gMap, gMap, gMap)) {
+    Serial.println("Azul")
     encenderLedRGB(0,0,255);
     moverAdelante();
   }
   else if (esColorAmarillo(rNorm, gNorm, bNorm)) {
+    Serial.println("Amarillo")
     encenderLedRGB(255,255,0);
     moverAdelante();
   }
   else if (esColorRosa(rNorm, gNorm, bNorm)) {
+    Serial.println("Rosa")
     encenderLedRGB(255,0,255);
     moverAdelante();
   }
   else if (esColorNegro(rNorm, gNorm, bNorm)) {
+    Serial.println("Negro/Obstaculo")
     encenderLed(0,0,0);
     evitarObstaculo();
   }
@@ -102,9 +113,9 @@ void loop() {
 
 // Función para apagar todos los LEDs
 void apagarLeds() {
-  digitalWrite(ledRojo, LOW);
-  digitalWrite(ledVerde, LOW);
-  digitalWrite(ledAzul, LOW);
+  digitalWrite(ledRojo, 0);
+  digitalWrite(ledVerde, 0);
+  digitalWrite(ledAzul, 0);
 }
 
 // Función para encender un LED específico
@@ -116,36 +127,55 @@ void encenderLed(int rojo, int verde, int azul) {
 
 // Funciones para determinar el color basándose en los valores normalizados
 bool esColorAzul(float r, float g, float b) {
-  return (b > umbralAzul && r < umbralAzul && g < umbralAzul);
+  //return (b > umbralAzul && r < umbralAzul && g < umbralAzul);
+  return (b > umbralAzul && r < b * 0.5 && g < b *0.7);
 }
 
 bool esColorAmarillo(float r, float g, float b) {
-  return (r > umbralAmarillo && g > umbralAmarillo && b < umbralAmarillo);
+  //return (r > umbralAmarillo && g > umbralAmarillo && b < umbralAmarillo);
+  return (r > umbralAmarillo && g > umbralAmarillo && b < 100);
 }
 
 bool esColorRosa(float r, float g, float b) {
-  return (r > umbralRosa && g < umbralRosa && b > umbralRosa);
+  //return (r > umbralRosa && g < umbralRosa && b > umbralRosa);
+  return (r > umbralRosa && b > umbralRosa && g < 100);
 }
 
 bool esColorNegro(float r, float g, float b) {
+  //return (r < umbralNegro && g < umbralNegro && b < umbralNegro);
   return (r < umbralNegro && g < umbralNegro && b < umbralNegro);
 }
 
 // Función para mover el robot hacia adelante
 void moverAdelante() {
-  digitalWrite(Izqln1, HIGH);
+  digitalWrite(izqln1, HIGH);
+  digitalWrite(izqln2, LOW);
+  digitalWrite(derln3, HIGH);
+  digitalWrite(derln4, LOW);
+}
+
+void detenerMotores(){
+  digitalWrite(izqln1, LOW);
   digitalWrite(Izqln2, LOW);
-  digitalWrite(Derln3, HIGH);
-  digitalWrite(Derln4, LOW);
+  digitalWrite(derln3, LOW);
+  digitalWrite(izqln1, LOW);
 }
 
 // Función para evitar el obstáculo (casilla negra)
 void evitarObstaculo() {
-  analogWrite(motorIzquierdo, 0);   // Detener motor izquierdo
-  analogWrite(motorDerecho, 0);     // Detener motor derecho
-  delay(1000);                      // Pausa para evitar choque
-  
-  //analogWrite(motorIzquierdo,
+  detenerMotores();
+  delay(500);
+
+  //Retroceder un poquito
+  digitalWrite(izqln1, LOW);
+  digitalWrite(inqln2,HIGH);
+  digitalWrite(derln3,LOW);
+  digitalWrite(derln4,HIGH);
+  delay(600);
+
+  detenerMotores();
+  delay(400);
+}
 
 
 
