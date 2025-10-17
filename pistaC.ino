@@ -4,7 +4,7 @@
 #include <Adafruit_TCS34725.h>
 
 // Inicializa el sensor TCS34725
-Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_1X);
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
 
 // Pines para el LED RGB 
 const int ledRojo = 3;
@@ -19,8 +19,20 @@ const int derln3 = 6;
 const int derln4 = 7;
 const int enB = 10;
 
+// Pines para ultrasónicos
+const int trigIzq = 44;
+const int echoIzq = 46;
+const int trigDer = 9;
+const int echoDer = 8;
+const int trigCentro = 38;
+const int echoCentro = 40;
+
 // Variables para los valores RGB
 uint16_t clear, red, green, blue;
+
+// Calibracion de color
+int minColor = 10;
+int maxColor = 400;
 
 // Umbrales para la detección de colores
 int umbralAzul = 150;
@@ -55,6 +67,16 @@ void setup() {
   analogWrite(enA, 255);
   analogWrite(enB, 255);
 
+  // Configurar Ultrasonicos
+  pinMode(trigCentro, OUTPUT);
+  pinMode(echoCentro, INPUT);
+
+  pinMode(trigDer, OUTPUT);
+  pinMode(echoDer, INPUT);
+
+  pinMode(trigIzq, OUTPUT);
+  pinMode(echoIzq, INPUT);
+
   // Inicializa los LEDs apagados
   apagarLedRGB();
 }
@@ -62,13 +84,6 @@ void setup() {
 void loop() {
   // Lee los valores RGB y el valor de "clear"
   tcs.getRawData(&red, &green, &blue, &clear);
-
-
-  // // Imprime los valores en el monitor serial
-  // Serial.print("R: "); Serial.print(red);
-  // Serial.print(" G: "); Serial.print(green);
-  // Serial.print(" B: "); Serial.print(blue);
-  // Serial.print(" Clear: "); Serial.println(clear);
 
   // Normaliza los valores de los colores
   float rNorm = (float)red / clear * 256;
@@ -85,6 +100,16 @@ void loop() {
   Serial.print(" G: "); Serial.print(rMap);
   Serial.print(" B: "); Serial.println(rMap);
   Serial.print(" Clear: "); Serial.println(clear);
+
+  // Medir distancias
+  long distIzq = medirDistancia(trigIzq, echoIzq);
+  long distCen = medirDistancia(trigCen, echoCen);
+  long distDer = medirDistancia(trigDer, echoDer);
+
+  Serial.print("Izq: "); Serial.print(distIzq);
+  Serial.print("  Centro: "); Serial.print(distCen);
+  Serial.print("  Der: "); Serial.println(distDer);
+ 
 
   // Determina el color detectado
   if (esColorAzul(gMap, gMap, gMap)) {
@@ -106,9 +131,27 @@ void loop() {
     Serial.println("Negro/Obstaculo")
     encenderLed(0,0,0);
     evitarObstaculo();
+    return;
   }
 
   delay(500); // Pausa para evitar lecturas muy rápidas
+
+  if (distCen < 5){
+    detenerMotores();
+    delay(200);
+    if (distDer > distIzq){
+      Serial.println("Gira derecha");
+      girarDerecha();
+    } else {
+      Serial.println("Gira izquierda");
+      girarIzquierda();
+    }
+    delay(600);
+  }
+  else {
+    moverAdelante();
+  }
+  delay(200);
 }
 
 // Función para apagar todos los LEDs
@@ -124,6 +167,8 @@ void encenderLed(int rojo, int verde, int azul) {
   analogWrite(ledVerde, Verde);
   analogWrite(ledAzul, azul);
 }
+
+ 
 
 // Funciones para determinar el color basándose en los valores normalizados
 bool esColorAzul(float r, float g, float b) {
@@ -146,6 +191,17 @@ bool esColorNegro(float r, float g, float b) {
   return (r < umbralNegro && g < umbralNegro && b < umbralNegro);
 }
 
+// Ultrasonicos
+  long medirDistancia(int trigPin, int echoPin) {
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+    long duracion = pulseIn(echoPin, HIGH, 25000);
+    return duracion * 0.034 / 2; // distancia en cm
+}
+
 // Función para mover el robot hacia adelante
 void moverAdelante() {
   digitalWrite(izqln1, HIGH);
@@ -158,8 +214,23 @@ void detenerMotores(){
   digitalWrite(izqln1, LOW);
   digitalWrite(Izqln2, LOW);
   digitalWrite(derln3, LOW);
-  digitalWrite(izqln1, LOW);
+  digitalWrite(derln4, LOW);
 }
+
+void girarDerecha(){
+  digitalWrite(izqln1, HIGH);
+  digitalWrite(izqln2, LOW);
+  digitalWrite(derln3, LOW);
+  digitalWrite(derln4, HIGH);
+}
+
+void girarIzquierda(){
+  digitalWrite(izqln1, LOW);
+  digitalWrite(izqln2, HIGH);
+  digitalWrite(derln3, HIGH);
+  digitalWrite(derln4, LOW);
+}
+
 
 // Función para evitar el obstáculo (casilla negra)
 void evitarObstaculo() {
@@ -175,6 +246,19 @@ void evitarObstaculo() {
 
   detenerMotores();
   delay(400);
+
+  long distIzq = medirDistancia(trigIzq, echoIzq);
+  long distDer = medirDistancia(trigDer, echoDer);
+
+  if (distDer > distIzq){
+    girarDerecha();
+  } else{
+    girarIzquierda();
+  }
+
+  delay(600);
+  detenerMotores();
+  delay(300);
 }
 
 
