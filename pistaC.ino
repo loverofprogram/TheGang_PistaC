@@ -14,7 +14,7 @@ const int ledAzul = 5;
 // Pines para los motores
 const int izqln1 = 4;
 const int izqln2 = 5;
-const int inA = 9;
+const int enA = 9;
 const int derln3 = 6;
 const int derln4 = 7;
 const int enB = 10;
@@ -58,7 +58,7 @@ void setup() {
 
   // Configura los pines de los motores como salida
   pinMode(izqln1, OUTPUT);
-  pinMode(Izqln2, OUTPUT);
+  pinMode(izqln2, OUTPUT);
   pinMode(enA, OUTPUT);
   pinMode(derln3, OUTPUT);
   pinMode(derln4, OUTPUT);
@@ -78,7 +78,7 @@ void setup() {
   pinMode(echoIzq, INPUT);
 
   // Inicializa los LEDs apagados
-  apagarLedRGB();
+  apagarLeds();
 }
 
 void loop() {
@@ -86,24 +86,26 @@ void loop() {
   tcs.getRawData(&red, &green, &blue, &clear);
 
   // Normaliza los valores de los colores
-  float rNorm = (float)red / clear * 256;
-  float gNorm = (float)green / clear * 256;
-  float bNorm = (float)blue / clear * 256;
+  if (clear > 0){
+    float rNorm = (float)red / clear * 256;
+    float gNorm = (float)green / clear * 256;
+    float bNorm = (float)blue / clear * 256;
+  }
 
   // Ver que tal funciona con esto
-  int rMap = constrain(map((int)rNorm, minColor, maxColor,0,255)0,255); //red
-  int gMap = constrain(map((int)gNorm, minColor, maxColor,0,255)0,255); //green
-  int bMap = constrain(map((int)bNorm, minColor, maxColor,0,255)0,255); //blue
+  int rMap = constrain(map((int)rNorm, minColor, maxColor,0,255),0,255); //red
+  int gMap = constrain(map((int)gNorm, minColor, maxColor,0,255),0,255); //green
+  int bMap = constrain(map((int)bNorm, minColor, maxColor,0,255),0,255); //blue
 
   // Muestra los valores RGB normalizados para facilitar la comparación
   Serial.print(" R: "); Serial.print(rMap);
-  Serial.print(" G: "); Serial.print(rMap);
-  Serial.print(" B: "); Serial.println(rMap);
+  Serial.print(" G: "); Serial.print(gMap);
+  Serial.print(" B: "); Serial.println(bMap);
   Serial.print(" Clear: "); Serial.println(clear);
 
   // Medir distancias
   long distIzq = medirDistancia(trigIzq, echoIzq);
-  long distCen = medirDistancia(trigCen, echoCen);
+  long distCen = medirDistancia(trigCentro, echoCentro);
   long distDer = medirDistancia(trigDer, echoDer);
 
   Serial.print("Izq: "); Serial.print(distIzq);
@@ -111,30 +113,13 @@ void loop() {
   Serial.print("  Der: "); Serial.println(distDer);
  
 
-  // Determina el color detectado
-  if (esColorAzul(gMap, gMap, gMap)) {
-    Serial.println("Azul")
-    encenderLedRGB(0,0,255);
-    moverAdelante();
-  }
-  else if (esColorAmarillo(rNorm, gNorm, bNorm)) {
-    Serial.println("Amarillo")
-    encenderLedRGB(255,255,0);
-    moverAdelante();
-  }
-  else if (esColorRosa(rNorm, gNorm, bNorm)) {
-    Serial.println("Rosa")
-    encenderLedRGB(255,0,255);
-    moverAdelante();
-  }
-  else if (esColorNegro(rNorm, gNorm, bNorm)) {
-    Serial.println("Negro/Obstaculo")
+
+  if (esColorNegro(rMap, gMap, bMap)) {
+    Serial.println("Negro/Obstaculo");
     encenderLed(0,0,0);
     evitarObstaculo();
     return;
   }
-
-  delay(500); // Pausa para evitar lecturas muy rápidas
 
   if (distCen < 5){
     detenerMotores();
@@ -147,12 +132,27 @@ void loop() {
       girarIzquierda();
     }
     delay(600);
+    return;
   }
-  else {
-    moverAdelante();
+
+
+
+  // Determina el color detectado
+  if (esColorAzul(rMap, gMap, bMap)) {
+    Serial.println("Azul");
+    encenderLedRGB(0,0,255);
   }
+  else if (esColorAmarillo(rMap, gMap, bMap)) {
+    Serial.println("Amarillo");
+    encenderLedRGB(255,255,0);
+  }
+  else if (esColorRosa(rMap, rMap, rMap)) {
+    Serial.println("Rosa");
+    encenderLedRGB(255,0,255);
+  }
+
+  moverAdelante();
   delay(200);
-}
 
 // Función para apagar todos los LEDs
 void apagarLeds() {
@@ -164,7 +164,7 @@ void apagarLeds() {
 // Función para encender un LED específico
 void encenderLed(int rojo, int verde, int azul) {
   analogWrite(ledRojo, rojo);
-  analogWrite(ledVerde, Verde);
+  analogWrite(ledVerde, verde);
   analogWrite(ledAzul, azul);
 }
 
@@ -212,7 +212,7 @@ void moverAdelante() {
 
 void detenerMotores(){
   digitalWrite(izqln1, LOW);
-  digitalWrite(Izqln2, LOW);
+  digitalWrite(izqln2, LOW);
   digitalWrite(derln3, LOW);
   digitalWrite(derln4, LOW);
 }
@@ -239,7 +239,7 @@ void evitarObstaculo() {
 
   //Retroceder un poquito
   digitalWrite(izqln1, LOW);
-  digitalWrite(inqln2,HIGH);
+  digitalWrite(izqln2,HIGH);
   digitalWrite(derln3,LOW);
   digitalWrite(derln4,HIGH);
   delay(600);
